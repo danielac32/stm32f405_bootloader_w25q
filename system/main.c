@@ -86,12 +86,12 @@ int main()
     
     FILE *fptr;
     char *file=getUrlTargetFileBoot();
-
-    if ((fptr = fopen(file,"r")) == NULL){
+    kprintf("file: %s\n",file);
+    if (!(fptr = fopen(file,"r"))){
          
-        kprintf("jump app\n");
+        kprintf("not found!....jump app\n");
         toggle(3);
-       delay(1000);
+        delay(1000);
         goto jump_app;
     }
     delay(1000);

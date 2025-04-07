@@ -175,7 +175,7 @@ void write_flash(uint32_t addr, uint32_t data){
     while(FLASH->SR & FLASH_SR_BSY); // check if busy
     FLASH->CR &= (~FLASH_CR_PG); // disable PG bit
 }
-
+/*
 char *getUrlTargetFileBoot(){
 	//char *s=full_path("/config/kernel");
 	FILE *fptr;
@@ -193,6 +193,56 @@ char *getUrlTargetFileBoot(){
 	//kprintf("%s %s\n",t,b);
 	fclose(fptr);
     return (char *)b;
+}*/
+char *getUrlTargetFileBoot() {
+    FILE *fptr;
+    // Abrir el archivo en modo lectura
+    if ((fptr = fopen("/config/kernel", "r")) == NULL) {
+        kprintf("Error! opening file\n");
+        kprintf("jump app\n");
+        return NULL; // Salir si no se puede abrir el archivo
+    }
+
+    // Obtener el tamaño del archivo
+    fseek(fptr, 0, SEEK_END);
+    int lsize = ftell(fptr);
+    fseek(fptr, 0, SEEK_SET);
+
+    // Si el archivo está vacío, salir
+    if (lsize == 0) {
+        kprintf("File is empty\n");
+        fclose(fptr);
+        return NULL;
+    }
+
+    // Asignar memoria para el búfer (+1 para el carácter nulo)
+    char *b = malloc(lsize + 1);
+    if (b == NULL) {
+        kprintf("Memory allocation failed\n");
+        fclose(fptr);
+        return NULL;
+    }
+
+    // Leer el contenido del archivo
+    fread(b, lsize, 1, fptr);
+
+    // Cerrar el archivo
+    fclose(fptr);
+
+    // Añadir el carácter nulo al final del búfer
+    b[lsize] = '\0';
+
+    // Eliminar caracteres no deseados (saltos de línea, espacios, etc.)
+    for (int i = lsize - 1; i >= 0; i--) {
+        if (b[i] == '\n' || b[i] == '\r' || b[i] == ' ') {
+            b[i] = '\0'; // Reemplazar caracteres no deseados con '\0'
+        } else {
+            break; // Detenerse cuando se encuentre un carácter válido
+        }
+    }
+
+    // Devolver el búfer limpio
+    return b;
 }
 
 void setUrlTargetFileBoot(char *str){
